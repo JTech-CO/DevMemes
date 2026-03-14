@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User-Friendly Sign Up</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gray-200 flex items-center justify-center p-4 font-sans text-gray-800">
+
+  <div class="bg-gray-100 p-8 rounded-none border-2 border-gray-400 shadow-xl w-full max-w-2xl">
+    <h1 class="text-2xl font-bold mb-6 border-b-2 border-gray-400 pb-2">User-Friendly Sign Up</h1>
+    <p class="text-xs text-red-500 mb-8">* Is a front-end developer really necessary?</p>
+
+    <form id="signupForm" class="space-y-8" onsubmit="submitFormAction(event)">
+      
+      <div class="space-y-4 bg-gray-200 p-4 border border-gray-300">
+        <h2 class="font-semibold text-lg">Select Birth date</h2>
+        
+        <div class="flex gap-4">
+          <span class="w-16 pt-2">month</span>
+          <div>
+            <div class="flex border border-gray-400 bg-white shadow-sm w-48 h-56 overflow-hidden">
+              <ul id="monthCol1" class="flex-1 border-r border-gray-400 flex flex-col py-1 overflow-y-auto"></ul>
+              <ul id="monthCol2" class="flex-1 border-r border-gray-400 flex flex-col py-1 overflow-y-auto"></ul>
+              <ul id="monthCol3" class="flex-1 flex flex-col py-1 overflow-y-auto"></ul>
+            </div>
+            <div class="mt-2 text-sm">
+              Current combination: <span id="currentMonthStr" class="font-mono font-bold text-blue-600">None</span>
+              <span id="validMonthCheck" class="ml-2 text-green-600 font-bold" style="display: none;">✓ Valid month!</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <span class="w-16">day</span>
+          <div class="flex border border-gray-400 bg-gray-50 w-24 h-8">
+            <div id="dayDisplay" class="flex-1 flex items-center justify-center font-mono select-none">0</div>
+            <div class="flex flex-col w-6 border-l border-gray-400">
+              <button type="button" id="btnDayUp" onclick="increaseDayValue()" class="flex-1 bg-gray-200 hover:bg-gray-300 border-b border-gray-400 flex items-center justify-center text-[10px] select-none">▲</button>
+              <button type="button" id="btnDayDown" onclick="decreaseDayValue()" class="flex-1 bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-[10px] select-none">▼</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <span class="w-16">year</span>
+          <div class="flex items-center gap-4 w-full max-w-xs">
+            <input type="text" id="yearDisplay" readonly value="1900" class="border border-gray-400 p-1 w-20 bg-gray-200 text-center shrink-0" />
+            <input type="range" id="yearSlider" min="1900" max="2026" value="1900" oninput="onYearSliderChange(this)" onkeydown="preventArrowKeysAction(event)" class="w-full h-2 bg-gray-400 rounded-lg appearance-none cursor-pointer focus:outline-none" />
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-2 bg-gray-200 p-4 border border-gray-300">
+        <h2 class="font-semibold text-lg">Name</h2>
+        <div class="flex items-center gap-4 mb-2">
+          <label class="text-sm">How many letters in your name?</label>
+          <select id="nameLengthSelect" class="border border-gray-400 p-1" onchange="onNameLengthChange(this)">
+          </select>
+        </div>
+        
+        <div id="nameCharsContainer" class="flex flex-wrap gap-2">
+        </div>
+      </div>
+
+      <div class="space-y-2 bg-gray-200 p-4 border border-gray-300">
+        <h2 class="font-semibold text-lg">Phone Number</h2>
+        <p class="text-xs text-gray-600 mb-2">Carefully adjust the slider until you find your exact phone number.</p>
+        <input type="range" id="phoneSlider" min="0" max="9999999999" value="0" oninput="onPhoneSliderChange(this)" onkeydown="preventArrowKeysAction(event)" class="w-full h-2 bg-gray-400 rounded-lg appearance-none cursor-pointer focus:outline-none" />
+        <div id="phoneDisplay" class="text-center font-mono text-xl border border-gray-400 bg-white p-2 mt-2">
+          000-0000-0000
+        </div>
+      </div>
+
+      <div id="buttonContainer" class="relative h-32 flex items-center justify-center border border-dashed border-gray-400 mt-8 overflow-hidden" onmouseleave="onMouseLeaveButtonContainer()">
+        <span class="text-gray-400 absolute text-sm">Try to catch the button in this area</span>
+        <button type="submit" id="submitBtn" class="absolute px-6 py-2 bg-blue-600 text-white font-bold rounded shadow-lg hover:bg-blue-700 transition-transform duration-200 ease-out z-10" onmouseenter="onMouseOverSubmitBtn()">
+          Submit
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white p-8 border-4 border-green-500 shadow-2xl max-w-sm text-center">
+      <h2 class="text-2xl font-bold text-green-600 mb-4">Sign Up Successful!</h2>
+      <p class="mb-4">Your patience is truly impressive!</p>
+      <div class="text-left text-sm bg-gray-100 p-4 mb-6 rounded font-mono">
+        <p>Name: <span id="modalName">None</span></p>
+        <p>Birth date: <span id="modalBirth"></span></p>
+        <p>Phone: <span id="modalPhone">0</span></p>
+      </div>
+      <button type="button" id="closeModalBtn" onclick="closeSuccessModalAction()" class="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700">
+        Close
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================
+    // GLOBAL STATE VARIABLES
+    // =========================================================
+    var global_month_part_1 = null;
+    var global_month_part_2 = null;
+    var global_month_part_3 = null;
+    var global_day_value = 0;
+    var global_year_value = 1900;
+    var global_name_length = 0;
+    var global_name_array = new Array();
+    var global_phone_number = 0;
+
+    // Database Mock Data (Hardcoded constants)
+    var db_month_col_1 = new Array('j', 'nov', 'dec', 'febr', 'm', 'sept');
+    var db_month_col_2 = new Array('octo', 'em', 'uly', 'a', 'une', 'an');
+    var db_month_col_3 = new Array('ber', 'y', 'uary', 'rch', 'pril', 'ugust');
+    var db_valid_months = new Array('january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december');
+
+    // =========================================================
+    // INITIALIZATION CONTROLLER
+    // =========================================================
+    window.onload = function() {
+      // console.log("System initialization started...");
+      initNameLengthSelectBox();
+      renderMonthUIElements();
+    };
+
+    function initNameLengthSelectBox() {
+      var selectBox = document.getElementById('nameLengthSelect');
+      var htmlString = "";
+      for (var i = 0; i <= 10; i++) {
+        htmlString = htmlString + "<option value='" + i + "'>" + i + "</option>";
+      }
+      selectBox.innerHTML = htmlString;
+    }
+
+    // =========================================================
+    // MONTH SELECTION LOGIC
+    // =========================================================
+    function handleMonthClickCol1(selectedValue) {
+      if (global_month_part_1 == selectedValue) {
+        global_month_part_1 = null;
+      } else {
+        global_month_part_1 = selectedValue;
+      }
+      renderMonthUIElements();
+    }
+
+    function handleMonthClickCol2(selectedValue) {
+      if (global_month_part_2 == selectedValue) {
+        global_month_part_2 = null;
+      } else {
+        global_month_part_2 = selectedValue;
+      }
+      renderMonthUIElements();
+    }
+
+    function handleMonthClickCol3(selectedValue) {
+      if (global_month_part_3 == selectedValue) {
+        global_month_part_3 = null;
+      } else {
+        global_month_part_3 = selectedValue;
+      }
+      renderMonthUIElements();
+    }
+
+    function renderMonthUIElements() {
+      // Build HTML for Column 1
+      var htmlCol1 = "";
+      for (var i = 0; i < db_month_col_1.length; i++) {
+        var item1 = db_month_col_1[i];
+        var cssClass1 = "px-2 py-1 cursor-pointer select-none transition-colors h-8 flex items-center border ";
+        if (global_month_part_1 == item1) {
+          cssClass1 = cssClass1 + "bg-gray-300 border-transparent";
+        } else {
+          cssClass1 = cssClass1 + "border-transparent hover:bg-gray-100";
+        }
+        htmlCol1 = htmlCol1 + "<li class='" + cssClass1 + "' onclick='handleMonthClickCol1(\"" + item1 + "\")'>" + item1 + "</li>";
+      }
+      document.getElementById('monthCol1').innerHTML = htmlCol1;
+
+      // Build HTML for Column 2
+      var htmlCol2 = "";
+      for (var j = 0; j < db_month_col_2.length; j++) {
+        var item2 = db_month_col_2[j];
+        var cssClass2 = "px-2 py-1 cursor-pointer select-none transition-colors h-8 flex items-center border ";
+        if (global_month_part_2 == item2) {
+          cssClass2 = cssClass2 + "bg-gray-300 border-transparent";
+        } else {
+          cssClass2 = cssClass2 + "border-transparent hover:bg-gray-100";
+        }
+        htmlCol2 = htmlCol2 + "<li class='" + cssClass2 + "' onclick='handleMonthClickCol2(\"" + item2 + "\")'>" + item2 + "</li>";
+      }
+      document.getElementById('monthCol2').innerHTML = htmlCol2;
+
+      // Build HTML for Column 3
+      var htmlCol3 = "";
+      for (var k = 0; k < db_month_col_3.length; k++) {
+        var item3 = db_month_col_3[k];
+        var cssClass3 = "px-2 py-1 cursor-pointer select-none transition-colors h-8 flex items-center border ";
+        if (global_month_part_3 == item3) {
+          cssClass3 = cssClass3 + "bg-blue-200 border-gray-600";
+        } else {
+          cssClass3 = cssClass3 + "border-transparent hover:bg-gray-100";
+        }
+        htmlCol3 = htmlCol3 + "<li class='" + cssClass3 + "' onclick='handleMonthClickCol3(\"" + item3 + "\")'>" + item3 + "</li>";
+      }
+      document.getElementById('monthCol3').innerHTML = htmlCol3;
+
+      // Validation and string assembly
+      var tempCurrentStr = "";
+      if (global_month_part_1 != null) { tempCurrentStr = tempCurrentStr + global_month_part_1; }
+      if (global_month_part_2 != null) { tempCurrentStr = tempCurrentStr + global_month_part_2; }
+      if (global_month_part_3 != null) { tempCurrentStr = tempCurrentStr + global_month_part_3; }
+
+      if (tempCurrentStr == "") {
+        document.getElementById('currentMonthStr').innerHTML = "None";
+      } else {
+        document.getElementById('currentMonthStr').innerHTML = tempCurrentStr;
+      }
+
+      var isValidMonthFlag = false;
+      for (var m = 0; m < db_valid_months.length; m++) {
+        if (db_valid_months[m] == tempCurrentStr.toLowerCase()) {
+          isValidMonthFlag = true;
+          break;
+        }
+      }
+
+      if (isValidMonthFlag == true) {
+        document.getElementById('validMonthCheck').style.display = "inline";
+      } else {
+        document.getElementById('validMonthCheck').style.display = "none";
+      }
+    }
+
+    // =========================================================
+    // DAY & YEAR LOGIC
+    // =========================================================
+    function increaseDayValue() {
+      global_day_value = global_day_value + 1;
+      if (global_day_value > 31) {
+        global_day_value = 31;
+      }
+      document.getElementById('dayDisplay').innerHTML = global_day_value;
+    }
+
+    function decreaseDayValue() {
+      global_day_value = global_day_value - 1;
+      if (global_day_value < 0) {
+        global_day_value = 0;
+      }
+      document.getElementById('dayDisplay').innerHTML = global_day_value;
+    }
+
+    function preventArrowKeysAction(e) {
+      var keyCode = e.keyCode || e.which;
+      // 37=Left, 38=Up, 39=Right, 40=Down
+      if (keyCode == 37 || keyCode == 38 || keyCode == 39 || keyCode == 40) {
+        e.preventDefault();
+      }
+    }
+
+    function onYearSliderChange(element) {
+      global_year_value = element.value;
+      document.getElementById('yearDisplay').value = global_year_value;
+    }
+
+    // =========================================================
+    // NAME BUILDER LOGIC
+    // =========================================================
+    function onNameLengthChange(element) {
+      global_name_length = parseInt(element.value);
+      global_name_array = new Array();
+      
+      for (var i = 0; i < global_name_length; i++) {
+        global_name_array.push('A');
+      }
+      renderNameSelectUIs();
+    }
+
+    function onNameCharChange(index, element) {
+      global_name_array[index] = element.value;
+    }
+
+    function renderNameSelectUIs() {
+      var container = document.getElementById('nameCharsContainer');
+      var htmlStr = "";
+      var alphabetObj = new Array('A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z');
+
+      for (var i = 0; i < global_name_array.length; i++) {
+        htmlStr = htmlStr + "<div class='flex flex-col items-center'>";
+        htmlStr = htmlStr + "<span class='text-xs text-gray-500'>Letter " + (i + 1) + "</span>";
+        htmlStr = htmlStr + "<select class='border border-gray-400 p-1 text-lg' onchange='onNameCharChange(" + i + ", this)'>";
+        
+        for (var a = 0; a < alphabetObj.length; a++) {
+          var charItem = alphabetObj[a];
+          var selectedAttr = "";
+          if (global_name_array[i] == charItem) {
+            selectedAttr = "selected='selected'";
+          }
+          htmlStr = htmlStr + "<option value='" + charItem + "' " + selectedAttr + ">" + charItem + "</option>";
+        }
+        
+        htmlStr = htmlStr + "</select></div>";
+      }
+      container.innerHTML = htmlStr;
+    }
+
+    // =========================================================
+    // PHONE FORMATTER LOGIC
+    // =========================================================
+    function onPhoneSliderChange(element) {
+      global_phone_number = element.value;
+      
+      // Zero padding algorithm
+      var strPhoneObj = new String(global_phone_number);
+      var zeroString = "";
+      for (var i = 0; i < (11 - strPhoneObj.length); i++) {
+        zeroString = zeroString + "0";
+      }
+      var fullPhoneStr = zeroString + strPhoneObj;
+      
+      var chunk1 = fullPhoneStr.substring(0, 3);
+      var chunk2 = fullPhoneStr.substring(3, 7);
+      var chunk3 = fullPhoneStr.substring(7, 11);
+      
+      document.getElementById('phoneDisplay').innerHTML = chunk1 + "-" + chunk2 + "-" + chunk3;
+    }
+
+    // =========================================================
+    // SUBMIT BUTTON EVASION LOGIC
+    // =========================================================
+    function onMouseOverSubmitBtn() {
+      // Random coordinates generator
+      var ranX = Math.floor(Math.random() * 600) - 300;
+      var ranY = Math.floor(Math.random() * 300) - 150;
+      var targetBtn = document.getElementById('submitBtn');
+      targetBtn.style.transform = "translate(" + ranX + "px, " + ranY + "px)";
+    }
+
+    function onMouseLeaveButtonContainer() {
+      var targetBtn = document.getElementById('submitBtn');
+      targetBtn.style.transform = "translate(0px, 0px)";
+    }
+
+    // =========================================================
+    // FORM SUBMISSION & MODAL CONTROLLER
+    // =========================================================
+    function submitFormAction(eventObj) {
+      eventObj.preventDefault(); // Stop HTTP POST
+      
+      // Calculate final month string
+      var finalMonthStr = "";
+      if (global_month_part_1 != null) { finalMonthStr = finalMonthStr + global_month_part_1; }
+      if (global_month_part_2 != null) { finalMonthStr = finalMonthStr + global_month_part_2; }
+      if (global_month_part_3 != null) { finalMonthStr = finalMonthStr + global_month_part_3; }
+
+      var isValidMonthFlag = false;
+      for (var m = 0; m < db_valid_months.length; m++) {
+        if (db_valid_months[m] == finalMonthStr.toLowerCase()) {
+          isValidMonthFlag = true;
+          break;
+        }
+      }
+
+      var finalNameStr = "";
+      for (var n = 0; n < global_name_array.length; n++) {
+        finalNameStr = finalNameStr + global_name_array[n];
+      }
+      if (finalNameStr == "") {
+        finalNameStr = "None";
+      }
+
+      var displayBirthStr = "";
+      if (isValidMonthFlag == true) {
+        displayBirthStr = finalMonthStr;
+      } else {
+        displayBirthStr = "(Invalid month)";
+      }
+      displayBirthStr = displayBirthStr + " " + global_day_value + ", " + global_year_value;
+
+      // Update Modal DOM Elements
+      document.getElementById('modalName').innerHTML = finalNameStr;
+      document.getElementById('modalBirth').innerHTML = displayBirthStr;
+      document.getElementById('modalPhone').innerHTML = global_phone_number;
+      
+      // Show Modal
+      document.getElementById('successModal').classList.remove('hidden');
+    }
+
+    function closeSuccessModalAction() {
+      document.getElementById('successModal').classList.add('hidden');
+    }
+
+  </script>
+</body>
+</html>
